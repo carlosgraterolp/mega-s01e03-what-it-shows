@@ -34,3 +34,12 @@ Support desk. Decision records: whoever signed them.
 ---
 
 Exported 2026-10-04 from the `support` repo, `apps/kb/` → `src/`.
+
+---
+
+## Added for MEGA.dev S01E03
+
+- `src/routes/kb/incidents/4471-split/+page.svx`: signed page, #4471 split into three problems.
+- `src/lib/kb/split.ts`, `src/lib/kb/SplitTable.svelte`: the logic and table that compute the split.
+- `rendered/kb/incidents/4471-split.html`: the page as the desk sees it (SvelteKit + mdsvex render, styles inlined).
+- Issues: [#1 parser (374)](../../issues/1) · [#2 form hint (33)](../../issues/2) · [#3 one-day move (5)](../../issues/3).
