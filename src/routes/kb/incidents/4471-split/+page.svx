@@ -14,20 +14,24 @@ signature: Carlos Graterol
 
   const REPO = 'https://github.com/carlosgraterolp/mega-s01e03-what-it-shows/issues';
   const tickets = {
-    parser: { label: 'issue 1', href: `${REPO}/1` },
-    hint: { label: 'issue 2', href: `${REPO}/2` },
-    shift: { label: 'issue 3', href: `${REPO}/3` },
+    parser: { label: 'issue 1', href: `${REPO}/1`, outcome: 'closed · fixed' },
+    hint: { label: 'issue 2', href: `${REPO}/2`, outcome: "closed · won't fix, form retired" },
+    shift: { label: 'issue 3', href: `${REPO}/3`, outcome: 'open · no fix yet' },
   };
 </script>
 
 [#4471](/kb/incidents/4471) was merged by subject line ([decision 0001](/kb/decisions/0001-dedupe-by-subject)):
 every report that said "wrong date" went into one ticket, marked known, with one fix queued. Read
 by tenant, channel and what people actually wrote, the reports are three problems with three
-different fixes. The queued parser fix closes only the first.
+different fixes.
+
+Engineering closed #4471 on 5 October: the parser is **fixed** (`fix(dates): parse dd/mm for eu
+locales`), and the form hint is **won't fix** because the booking-v3 form is retired. That update
+says nothing about the third problem.
 
 <Callout kind="warn">
-Not one issue. Fixing the parser leaves the form-hint and one-day reports open. Each problem now
-has its own ticket.
+#4471 is closed, but not everything in it is. The one-day moves are a different bug, and neither
+change touches them. Their ticket stays open.
 </Callout>
 
 ## The split
@@ -38,18 +42,20 @@ has its own ticket.
 
 **`parser`: the shared parser reads dates month first.** Every tenant in #4471 writes the day
 first, so any date with a day of 12 or less comes out swapped: 7 April becomes 4 July. This is what
-#4471 says it is.
+#4471 says it is. Fixed.
 
 **`hint`: booking-v3 tells day-first people to type month first.** The `booking-v3` form prints
 `MM/DD/YYYY` under its date field. Its tenants' people follow the hint, and the form reads the date
 the tenant's way, day first. The symptom is the same swap, so the subject lines match. The fix is in
 the form, not the parser. Only reports through the `form` channel of a booking-v3 tenant are this
-one. Intake's `hint` tag guesses from the reporter's browser, so do not trust it for this.
+one. Intake's `hint` tag guesses from the reporter's browser, so do not trust it for this. Won't
+fix: the booking-v3 form is retired, so no new reports can come this way.
 
 **`shift`: the date moves by one day.** No day and month swap: "12 May shows 11 May", an invite
 that arrives before the booking was made, a client in Lisbon who got Tuesday while a client in
 Toronto got Monday. That looks like a time zone or date-boundary bug. The desk had already marked
 these as a one-day move in its notes, but the #4471 page still files them under the parser.
+Still open.
 
 ## Lessons
 

@@ -3,13 +3,24 @@
   import notes from '#lib/data/desk-notes.json';
   import { splitTicket, type Problem } from '#lib/kb/split';
   import { tenantOf } from '#lib/kb/locales';
-  import type { Report } from '#lib/kb/causes';
+  import { groupByCause, uniqueById, type Report } from '#lib/kb/causes';
 
-  // tickets: problem → the ticket filed for it.
-  let { ticket, tickets = {} }: { ticket: number; tickets?: Partial<Record<Problem, { label: string; href: string }>> } =
-    $props();
+  // tickets: problem → the ticket filed for it, and what became of it.
+  let {
+    ticket,
+    tickets = {},
+  }: { ticket: number; tickets?: Partial<Record<Problem, { label: string; href: string; outcome?: string }>> } = $props();
 
   const split = $derived(splitTicket(reports as Report[], ticket, tenantOf, notes.oneDayMove));
+  // The desk's own view (CauseTable): by cause alone, one-day moves left where their tenant files them.
+  const desk = $derived(
+    new Map(
+      groupByCause(uniqueById(reports as Report[]).filter((r) => r.mergedInto === ticket), tenantOf).map((g) => [
+        g.cause as Problem,
+        g.reports.length,
+      ]),
+    ),
+  );
 
   const WHAT: Record<Problem, string> = {
     parser: 'shared parser reads day-first dates month first',
@@ -33,23 +44,30 @@
 
 <table>
   <thead>
-    <tr><th>problem</th><th>reports</th><th>tenants</th><th>channels</th><th>seen</th><th>ticket</th></tr>
+    <tr><th>problem</th><th>reports</th><th>desk's view</th><th>tenants</th><th>channels</th><th>seen</th><th>ticket</th></tr>
   </thead>
   <tbody>
     {#each split.groups as g (g.problem)}
       <tr>
         <td><code>{g.problem}</code><br /><span class="muted">{WHAT[g.problem]}</span></td>
         <td><strong>{g.reports.length}</strong></td>
+        <td>{desk.get(g.problem) ?? `in parser`}</td>
         <td>{g.tenants}</td>
         <td class="muted">{chans(g.channels)}</td>
         <td>{g.firstSeen} → {g.lastSeen}</td>
         <td>
-          {#if tickets[g.problem]}<a href={tickets[g.problem]?.href}>{tickets[g.problem]?.label}</a>{:else}<span class="warn">none</span>{/if}
+          {#if tickets[g.problem]}<a href={tickets[g.problem]?.href}>{tickets[g.problem]?.label}</a>
+            {#if tickets[g.problem]?.outcome}<br /><span class="muted">{tickets[g.problem]?.outcome}</span>{/if}{:else}<span class="warn">none</span>{/if}
         </td>
       </tr>
     {/each}
   </tbody>
 </table>
+
+<p class="muted">
+  The desk's view counts the {split.groups.find((g) => g.problem === 'shift')?.reports.length ?? 0} one-day moves under
+  <code>parser</code>, by tenant. The tickets use the desk's count; this page shows both.
+</p>
 
 <style>
   .sum { font-size: 1.1rem; }
